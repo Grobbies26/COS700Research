@@ -112,6 +112,8 @@ def getHashValues(filePageObjects = []):
     
     hashes = []
     for i, page in enumerate(filePageObjects):
+        if page.hashobject == None or page.hashroot == None or page.hashleafs == None:
+            raise Exception("No hash values found in PDF")
         obj = page.hashobject.replace("(","").replace(")","")
         root = page.hashroot.replace("(","").replace(")","")
         leafs = [val.replace("(","").replace(")","") for val in page.hashleafs]
@@ -124,6 +126,9 @@ def getRootHashValues(root = {}):
     if root == {}:
         raise Exception("No root object provided")
     
+
+    if root.hashinfo == None or root.hashroot == None:
+        raise Exception("No hash values found in PDF")
     hinfo = root.hashinfo.replace("(","").replace(")","")
     hroot = root.hashroot.replace("(","").replace(")","")
 
@@ -175,6 +180,8 @@ def protectPDF(path = ""):
         return
 
     try:
+        print(F"Protecting: {path}")
+
         #Extract the file page objects and use them to calculate the hash values
         filePageObjects = getFilePageObjects(pdf)
         fpg = filePageObjects
@@ -220,8 +227,10 @@ def assessForForgery(path = ""):
     except:
         print("Invalid Path Provided")
         return
-    
+
     try:
+        print(F"Assessing: {path}")
+
         #Calculate and retrieve all hash values in PDF
         filePageObjects = getFilePageObjects(pdf)
         storedRootHashValues = getRootHashValues(pdf.Root)
@@ -235,7 +244,7 @@ def assessForForgery(path = ""):
         print("There was an error assessing the PDF: ", err)
         return
     finally:
-        print("Process Completed")
+        print("Process Completed\n")
         return
 
     
@@ -268,7 +277,7 @@ def compareHashes(calculated = [], stored = [], rootC = {}, rootS={}):
             print(f"Object Hashes are not equal for page: {i+1}")
         if st["root"] != ca["root"]:
             print(f"Root Hashes are not equal for page: {i+1}")
-        for j in range(len(st["leafs"])):
+        for j in range(len(ca["leafs"])):
             if st["leafs"][j] != ca["leafs"][j]:
                 print(f"Changes detected in the {j} th 256 bytes of the content stream")
 
@@ -281,27 +290,136 @@ def compareHashes(calculated = [], stored = [], rootC = {}, rootS={}):
     return
 
 
+# Function to run all tests
+def testAllPDFs(protect = False):
+    if protect:
+        protectTestPDFs()
+    assessTestPDFs()
+    return
 
+#Protect all of the test PDFs
+def protectTestPDFs():
+    pathTextSA = "./Test_PDFs/TextSA.pdf"
+    pathTextMA = "./Test_PDFs/TextMA.pdf"
+    pathTextSU = "./Test_PDFs/TextSU.pdf"
+    pathTextMU = "./Test_PDFs/TextMU.pdf"
+    pathTextSD = "./Test_PDFs/TextSD.pdf"
+    pathTextMD = "./Test_PDFs/TextMD.pdf"
+    pathTextC  = "./Test_PDFs/TextC.pdf"
+
+    pathImageSA = "./Test_PDFs/ImageSA.pdf"
+    pathImageMA = "./Test_PDFs/ImageMA.pdf"
+    pathImageSU = "./Test_PDFs/ImageSU.pdf"
+    pathImageMU = "./Test_PDFs/ImageMU.pdf"
+    pathImageSD = "./Test_PDFs/ImageSD.pdf"
+    pathImageMD = "./Test_PDFs/ImageMD.pdf"
+    pathImageC  = "./Test_PDFs/ImageC.pdf"
+
+    pathMetaSU = "./Test_PDFs/MetaSU.pdf"
+    pathMetaMU = "./Test_PDFs/MetaMU.pdf"
+    pathMetaSD = "./Test_PDFs/MetaSD.pdf"
+    pathMetaMD = "./Test_PDFs/MetaMD.pdf"
+    pathMetaC  = "./Test_PDFs/MetaC.pdf"
+
+    pathCAll  = "./Test_PDFs/CAll.pdf"
+    
+    protectPDF(pathTextSA)
+    protectPDF(pathTextMA)
+    protectPDF(pathTextSU)
+    protectPDF(pathTextMU)
+    protectPDF(pathTextSD)
+    protectPDF(pathTextMD)
+    protectPDF(pathTextC)
+
+    protectPDF(pathImageSA)
+    protectPDF(pathImageMA)
+    protectPDF(pathImageSU)
+    protectPDF(pathImageMU)
+    protectPDF(pathImageSD)
+    protectPDF(pathImageMD)
+    protectPDF(pathImageC)
+
+    protectPDF(pathMetaSU)
+    protectPDF(pathMetaMU)
+    protectPDF(pathMetaSD)
+    protectPDF(pathMetaMD)
+    protectPDF(pathMetaC)
+
+    protectPDF(pathCAll)
+
+    return
+
+# Assess all of the test PDFs
+def assessTestPDFs():
+    pathNoHash = "./Test_PDFs/NoHash.pdf"
+
+    pathTextSA = "./Test_PDFs/TextSA_hash.pdf"
+    pathTextMA = "./Test_PDFs/TextMA_hash.pdf"
+    pathTextSU = "./Test_PDFs/TextSU_hash.pdf"
+    pathTextMU = "./Test_PDFs/TextMU_hash.pdf"
+    pathTextSD = "./Test_PDFs/TextSD_hash.pdf"
+    pathTextMD = "./Test_PDFs/TextMD_hash.pdf"
+    pathTextC  = "./Test_PDFs/TextC_hash.pdf"
+
+    pathImageSA = "./Test_PDFs/ImageSA_hash.pdf"
+    pathImageMA = "./Test_PDFs/ImageMA_hash.pdf"
+    pathImageSU = "./Test_PDFs/ImageSU_hash.pdf"
+    pathImageMU = "./Test_PDFs/ImageMU_hash.pdf"
+    pathImageSD = "./Test_PDFs/ImageSD_hash.pdf"
+    pathImageMD = "./Test_PDFs/ImageMD_hash.pdf"
+    pathImageC  = "./Test_PDFs/ImageC_hash.pdf"
+
+    pathMetaSU = "./Test_PDFs/MetaSU_hash.pdf"
+    pathMetaMU = "./Test_PDFs/MetaMU_hash.pdf"
+    pathMetaSD = "./Test_PDFs/MetaSD_hash.pdf"
+    pathMetaMD = "./Test_PDFs/MetaMD_hash.pdf"
+    pathMetaC  = "./Test_PDFs/MetaC_hash.pdf"
+
+    pathCAll  = "./Test_PDFs/CAll_hash.pdf"
+
+    assessForForgery(pathNoHash)
+
+    assessForForgery(pathTextSA)
+    assessForForgery(pathTextMA)
+    assessForForgery(pathTextSU)
+    assessForForgery(pathTextMU)
+    assessForForgery(pathTextSD)
+    assessForForgery(pathTextMD)
+    assessForForgery(pathTextC)
+
+    assessForForgery(pathImageSA)
+    assessForForgery(pathImageMA)
+    assessForForgery(pathImageSU)
+    assessForForgery(pathImageMU)
+    assessForForgery(pathImageSD)
+    assessForForgery(pathImageMD)
+    assessForForgery(pathImageC)
+
+    assessForForgery(pathMetaSU)
+    assessForForgery(pathMetaMU)
+    assessForForgery(pathMetaSD)
+    assessForForgery(pathMetaMD)
+    assessForForgery(pathMetaC)
+
+    assessForForgery(pathCAll)
+
+    return
+
+
+test = False
+protect = False
 #Main function
 if __name__ == '__main__':
-    patha = './Test_PDFS/simplePDF.pdf'
-    pathb = './Test_PDFS/AdobeTest.pdf'
-    pathc = './Test_PDFS/test.pdf'
-    # path = './Test_PDFS/test.pdf'
-    pathForga = './Test_PDFS/simplePDF_hash.pdf'
-    pathForgb = './Test_PDFS/AdobeTest_hash.pdf'
-    pathForgc = './Test_PDFS/test_hash.pdf'
-    pathForg = './Test_PDFS/t.pdf'
-
-    # protectPDF(path)
-    # assessForForgery(pathForg)
-
-    # protectPDF(patha)
-    # assessForForgery(pathForga)
-
-    # protectPDF(pathb)
-    # assessForForgery(pathForgb)
-
-    protectPDF(pathc)
-    assessForForgery(pathForgc)
     
+    if test:
+        testAllPDFs(protect)
+
+    protect = input("Would you like to protect a PDF? (y/n): ")
+    if protect == "y":
+        path = input("Enter the path to the PDF you would like to protect: ")
+        protectPDF(path)
+
+    assess = input("Would you like to assess a PDF for tampering? (y/n): ")
+    if assess == "y":
+        path = input("Enter the path to the PDF you would like to assess: ")
+        assessForForgery(path)
